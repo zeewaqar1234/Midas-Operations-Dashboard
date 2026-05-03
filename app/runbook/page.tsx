@@ -13,6 +13,8 @@ import {
   Zap,
   RefreshCw,
   Activity,
+  Rocket,
+  FileText,
 } from "lucide-react";
 import { useNavHistory } from "@/hooks/useNavHistory";
 import { isStale } from "@/lib/formatters";
@@ -208,6 +210,21 @@ const WORKFLOWS: Workflow[] = [
     ],
   },
   {
+    id: "product-launch",
+    label: "Product Launch",
+    icon: <Rocket size={15} />,
+    description: "End-to-end checklist for onboarding a new strategy manager and launching a new mToken",
+    steps: [
+      { id: "pl1", title: "Legal & Compliance", detail: "Strategy Management Agreement executed. Investment universe and risk parameters documented. Prospectus notification filed with FMA (Liechtenstein). Luxembourg compartment structure confirmed (if applicable). KYC/eligibility criteria defined for target investors. Non-US/non-UK investor restriction verified. MiCA Article 50 reporting obligations mapped.", variant: "warning" },
+      { id: "pl2", title: "MPC Workspace Setup", detail: "Create Fordefi MPC workspace for the new product. Distribute MPC key shares to strategy manager. Configure approval policy: strategy manager can propose but cannot unilaterally execute — Midas retains co-signer requirement. Set whitelisted destination addresses and transaction size limits." },
+      { id: "pl3", title: "Smart Contract Deployment", detail: "Deploy mToken ERC-20 contract using TransparentUpgradeableProxy pattern. Assign DEFAULT_ADMIN_ROLE to Midas admin multisig. Assign MINTER_ROLE and BURNER_ROLE to ops wallet. Verify deployment and roles on Etherscan. Deploy Chainlink-compatible oracle, set initial NAV price, verify latestRoundData() returns correct values." },
+      { id: "pl4", title: "DeFi Integration", detail: "Submit Morpho market proposal if applicable. Configure Pendle integration if applicable. Seed MSL liquidity sleeve with initial USDC for instant redemptions. Set instant redemption capacity target (~10% of TVL). Verify all protocol integrations on-chain." },
+      { id: "pl5", title: "Testing", detail: "Execute a small test subscription end-to-end: investor sends USDC → eligibility check → mint at oracle NAV → tokens received. Execute a small test redemption: burn request → MSL pool verification → USDC returned. Confirm both transactions on Etherscan.", variant: "warning" },
+      { id: "pl6", title: "Go-Live", detail: "Configure monitoring alerts for oracle staleness and large transactions. Prepare investor communications. Publish product page on midas.app. Open subscriptions to eligible investors. Monitor first live transactions closely.", variant: "success" },
+    ],
+    checklist: [],
+  },
+  {
     id: "incident",
     label: "Incident Response",
     icon: <AlertTriangle size={15} />,
@@ -396,6 +413,113 @@ function RiskFlags() {
   );
 }
 
+// ─── Product Launch Checklist — sectioned ────────────────────────────────────
+
+const LAUNCH_SECTIONS = [
+  {
+    title: "Legal & Compliance",
+    items: [
+      "Strategy Management Agreement executed",
+      "Investment universe and risk parameters documented",
+      "Prospectus notification filed with FMA (Liechtenstein)",
+      "Luxembourg compartment structure confirmed (if applicable)",
+      "KYC/eligibility criteria defined for target investors",
+      "Non-US/non-UK investor restriction verified",
+      "MiCA Article 50 reporting obligations mapped",
+    ],
+  },
+  {
+    title: "Technical Setup",
+    items: [
+      "Fordefi MPC workspace created",
+      "MPC key shares distributed to strategy manager",
+      "Approval policy configured (2-of-N quorum)",
+      "Whitelisted destination addresses set",
+      "Transaction size limits configured",
+    ],
+  },
+  {
+    title: "Smart Contract Deployment",
+    items: [
+      "mToken contract deployed (TransparentUpgradeableProxy)",
+      "Admin role assigned to Midas admin multisig",
+      "Minter/Burner roles assigned to ops wallet",
+      "Oracle contract deployed and initial NAV set",
+      "Contract verified on Etherscan",
+    ],
+  },
+  {
+    title: "DeFi Integration",
+    items: [
+      "Morpho market proposal submitted",
+      "Pendle integration configured (if applicable)",
+      "MSL liquidity sleeve seeded with initial USDC",
+      "Instant redemption capacity target set (~10% of TVL)",
+    ],
+  },
+  {
+    title: "Go-Live",
+    items: [
+      "Test subscription processed end-to-end",
+      "Test redemption processed end-to-end",
+      "Monitoring alerts configured (oracle staleness, large tx)",
+      "Investor communications prepared",
+      "Product page live on midas.app",
+    ],
+  },
+];
+
+function ProductLaunchChecklist() {
+  const allItems = LAUNCH_SECTIONS.flatMap((s) => s.items);
+  const [checked, setChecked] = useState<Set<number>>(new Set());
+
+  const globalIndex = (sectionIdx: number, itemIdx: number) => {
+    let offset = 0;
+    for (let i = 0; i < sectionIdx; i++) offset += LAUNCH_SECTIONS[i].items.length;
+    return offset + itemIdx;
+  };
+
+  const toggle = (idx: number) =>
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+
+  const done = checked.size;
+  const total = allItems.length;
+
+  return (
+    <div className="card p-5 flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">Product Launch Checklist</span>
+        <span className="text-xs text-text-secondary tabular-nums">{done}/{total}</span>
+      </div>
+      <div className="w-full h-1 rounded-full bg-surface-3">
+        <div className="h-1 rounded-full bg-success transition-all duration-300" style={{ width: `${(done / total) * 100}%` }} />
+      </div>
+      {LAUNCH_SECTIONS.map((section, si) => (
+        <div key={section.title} className="flex flex-col gap-1.5">
+          <div className="text-[10px] font-semibold text-accent uppercase tracking-widest pt-1">{section.title}</div>
+          {section.items.map((item, ii) => {
+            const idx = globalIndex(si, ii);
+            return (
+              <button key={idx} onClick={() => toggle(idx)} className="flex items-start gap-2 text-left group">
+                {checked.has(idx)
+                  ? <CheckSquare size={13} className="text-success shrink-0 mt-0.5" />
+                  : <Square size={13} className="text-text-muted shrink-0 mt-0.5 group-hover:text-text-secondary" />}
+                <span className={`text-xs transition-colors ${checked.has(idx) ? "text-text-muted line-through" : "text-text-secondary group-hover:text-text-primary"}`}>
+                  {item}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function RunbookPage() {
@@ -423,7 +547,7 @@ export default function RunbookPage() {
       </div>
 
       {/* Workflow selector */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         {WORKFLOWS.map((w) => (
           <button
             key={w.id}
@@ -465,10 +589,16 @@ export default function RunbookPage() {
 
         {/* Checklist + reference — 2 cols */}
         <div className="xl:col-span-2 flex flex-col gap-4">
-          <div className="card p-5">
-            <Checklist items={workflow.checklist} />
-          </div>
+          {/* Product Launch uses a sectioned checklist */}
+          {workflow.id === "product-launch" ? (
+            <ProductLaunchChecklist />
+          ) : (
+            <div className="card p-5">
+              <Checklist items={workflow.checklist} />
+            </div>
+          )}
 
+          {/* Quick Reference */}
           <div className="card p-5 flex flex-col gap-3">
             <div className="text-xs font-semibold text-text-muted uppercase tracking-widest">
               Quick Reference
@@ -494,6 +624,31 @@ export default function RunbookPage() {
                 <Activity size={12} className="text-text-muted shrink-0 mt-0.5" />
                 <span>Oracle max age: <strong className="text-text-primary">24 hours</strong></span>
               </div>
+            </div>
+          </div>
+
+          {/* Regulatory Quick Reference */}
+          <div className="card p-5 flex flex-col gap-3">
+            <div className="flex items-center gap-1.5">
+              <FileText size={13} className="text-text-muted" />
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-widest">
+                Regulatory Framework
+              </div>
+            </div>
+            <div className="space-y-2 text-xs text-text-secondary divide-y divide-border/40">
+              {[
+                { label: "Issuer", value: "Midas Software GmbH (Berlin) / Luxembourg SPV" },
+                { label: "Prospectus", value: "FMA-approved (Liechtenstein)" },
+                { label: "Structure", value: "Tokenized certificates — German law. Qualified subordinated debt instruments." },
+                { label: "Eligible", value: "Non-US, non-UK, non-sanctioned jurisdictions" },
+                { label: "Framework", value: "EU Prospectus Regulation, MiCA (where applicable)" },
+                { label: "Verification", value: "Ankura Trust (independent verification agent)" },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex flex-col gap-0.5 py-1.5 first:pt-0 last:pb-0">
+                  <span className="text-[10px] text-text-muted uppercase tracking-widest">{label}</span>
+                  <span className="text-text-secondary leading-snug">{value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
