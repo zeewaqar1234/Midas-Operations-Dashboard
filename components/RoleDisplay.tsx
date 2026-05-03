@@ -1,27 +1,57 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShieldCheck, ExternalLink, RefreshCw } from "lucide-react";
+import { ShieldCheck, ExternalLink, RefreshCw, Key, Flame, Coins, PlusCircle } from "lucide-react";
 import { publicClient } from "@/lib/viem-client";
 import { ACCESS_CONTROL_ABI } from "@/lib/contracts";
 import { ROLES, ROLE_LABELS, ETHERSCAN_URL } from "@/lib/constants";
-import StatusBadge from "@/components/StatusBadge";
 import AddressTag from "@/components/AddressTag";
 import { getEventLogs } from "@/lib/etherscan";
 import { keccak256, toHex } from "viem";
 
-// All roles we want to check
-const ROLE_LIST = [
-  { key: "DEFAULT_ADMIN_ROLE", hash: ROLES.DEFAULT_ADMIN_ROLE, label: "DEFAULT_ADMIN" },
-  { key: "MINTER_ROLE", hash: ROLES.MINTER_ROLE, label: "MINTER_ROLE" },
-  { key: "BURNER_ROLE", hash: ROLES.BURNER_ROLE, label: "BURNER_ROLE" },
-  { key: "DEPOSITOR_ROLE", hash: ROLES.DEPOSITOR_ROLE, label: "DEPOSITOR_ROLE" },
-];
+// ─── Role group definitions — operational framing ─────────────────────────────
 
-// Candidate role holders — discovered from RoleGranted events
+const ROLE_GROUPS = [
+  {
+    key: "DEFAULT_ADMIN_ROLE",
+    hash: ROLES.DEFAULT_ADMIN_ROLE,
+    label: "Admin",
+    description: "Controls the contract — can grant/revoke all roles",
+    icon: Key,
+    color: "text-warning",
+    bg: "bg-warning/10",
+  },
+  {
+    key: "MINTER_ROLE",
+    hash: ROLES.MINTER_ROLE,
+    label: "Minter",
+    description: "Can process subscriptions — creates new tokens",
+    icon: PlusCircle,
+    color: "text-success",
+    bg: "bg-success/10",
+  },
+  {
+    key: "BURNER_ROLE",
+    hash: ROLES.BURNER_ROLE,
+    label: "Burner",
+    description: "Can process redemptions — destroys tokens",
+    icon: Flame,
+    color: "text-danger",
+    bg: "bg-danger/10",
+  },
+  {
+    key: "DEPOSITOR_ROLE",
+    hash: ROLES.DEPOSITOR_ROLE,
+    label: "Depositor",
+    description: "Can deposit into the contract",
+    icon: Coins,
+    color: "text-accent",
+    bg: "bg-accent/10",
+  },
+] as const;
+
 interface RoleHolder {
   role: string;
-  roleLabel: string;
   address: string;
   active: boolean;
 }
@@ -32,6 +62,76 @@ const ROLE_REVOKED_TOPIC = keccak256(toHex("RoleRevoked(bytes32,address,address)
 function addressFromTopic(topic: string): string {
   return "0x" + topic.slice(-40);
 }
+
+// ─── Single role group card ───────────────────────────────────────────────────
+
+function RoleGroupCard({
+  group,
+  holders,
+  loading,
+}: {
+  group: (typeof ROLE_GROUPS)[number];
+  holders: RoleHolder[];
+  loading: boolean;
+}) {
+  const Icon = group.icon;
+  const active = holders.filter((h) => h.active);
+  const revoked = holders.filter((h) => !h.active);
+
+  return (
+    <div className="flex flex-col gap-2.5 p-4 rounded-[8px] bg-surface-2/50 border border-border/50">
+      {/* Role header */}
+      <div className="flex items-start gap-2.5">
+        <div className={`w-7 h-7 rounded-[6px] ${group.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+          <Icon size={13} className={group.color} />
+        </div>
+        <div>
+          <div className={`text-xs font-semibold ${group.color}`}>{group.label}</div>
+          <div className="text-[11px] text-text-muted leading-snug mt-0.5">{group.description}</div>
+        </div>
+      </div>
+
+      {/* Role hash */}
+      <div className="font-mono text-[10px] text-text-muted truncate">
+        {group.hash.slice(0, 18)}…
+      </div>
+
+      {/* Address list */}
+      {loading ? (
+        <div className="space-y-1.5">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="animate-pulse h-7 rounded-[6px] bg-surface-3" />
+          ))}
+        </div>
+      ) : active.length === 0 && revoked.length === 0 ? (
+        <div className="text-[11px] text-text-muted italic">No addresses on record</div>
+      ) : (
+        <div className="space-y-1.5">
+          {active.map((h) => (
+            <div key={h.address} className="flex items-center justify-between gap-2 bg-surface rounded-[6px] px-2.5 py-1.5 border border-border/40">
+              <AddressTag address={h.address} showLabel etherscanLink copyable />
+              <span className="flex items-center gap-1 text-[10px] text-success shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                Active
+              </span>
+            </div>
+          ))}
+          {revoked.map((h) => (
+            <div key={h.address} className="flex items-center justify-between gap-2 bg-surface rounded-[6px] px-2.5 py-1.5 border border-border/40 opacity-50">
+              <AddressTag address={h.address} showLabel copyable />
+              <span className="flex items-center gap-1 text-[10px] text-text-muted shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-text-muted" />
+                Revoked
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function RoleDisplay({
   contract,
@@ -48,15 +148,12 @@ export default function RoleDisplay({
     setLoading(true);
     setError(null);
     try {
-      // Pull all RoleGranted events to find who ever received a role
       const [granted, revoked] = await Promise.allSettled([
         getEventLogs(contract, ROLE_GRANTED_TOPIC, { offset: 100 }),
         getEventLogs(contract, ROLE_REVOKED_TOPIC, { offset: 100 }),
       ]);
 
-      // Build a set of (role, address) pairs that were ever granted
       const grantedPairs = new Map<string, { role: string; address: string }>();
-
       if (granted.status === "fulfilled") {
         for (const log of granted.value) {
           const role = log.topics[1] ?? "";
@@ -65,7 +162,6 @@ export default function RoleDisplay({
         }
       }
 
-      // Build set of revoked (role, address) pairs
       const revokedPairs = new Set<string>();
       if (revoked.status === "fulfilled") {
         for (const log of revoked.value) {
@@ -75,7 +171,6 @@ export default function RoleDisplay({
         }
       }
 
-      // For each unique (role, address) pair, verify current status on-chain
       const pairs = Array.from(grantedPairs.values());
       const checks = await Promise.allSettled(
         pairs.map(({ role, address }) =>
@@ -98,12 +193,6 @@ export default function RoleDisplay({
             : !revokedPairs.has(`${role}-${address}`),
       }));
 
-      // Sort: active first, then by role label
-      result.sort((a, b) => {
-        if (a.active !== b.active) return a.active ? -1 : 1;
-        return a.roleLabel.localeCompare(b.roleLabel);
-      });
-
       setHolders(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load roles");
@@ -118,12 +207,13 @@ export default function RoleDisplay({
   return (
     <div className="card flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
         <div className="flex items-center gap-2">
           <ShieldCheck size={15} className="text-accent" />
-          <span className="text-sm font-semibold text-text-primary">
-            Contract Roles — {contractLabel}
-          </span>
+          <div>
+            <span className="text-sm font-semibold text-text-primary">{contractLabel}</span>
+            <span className="text-xs text-text-muted ml-2">Workspace</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <a
@@ -134,85 +224,42 @@ export default function RoleDisplay({
           >
             <ExternalLink size={13} />
           </a>
-          <button
-            onClick={load}
-            disabled={loading}
-            className="btn-ghost py-1 px-2"
-          >
+          <button onClick={load} disabled={loading} className="btn-ghost py-1 px-2">
             <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
 
-      {/* Role hash reference */}
-      <div className="px-5 py-3 border-b border-border bg-surface-2/40 flex flex-wrap gap-3">
-        {ROLE_LIST.map((r) => (
-          <div key={r.key} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-medium text-text-muted uppercase tracking-widest">
-              {r.label}
-            </span>
-            <span className="font-mono text-[10px] text-text-secondary">
-              {r.hash.slice(0, 10)}…
-            </span>
-          </div>
-        ))}
+      {/* Contract address */}
+      <div className="px-5 py-2.5 border-b border-border/40 bg-surface-2/30">
+        <span className="text-[11px] text-text-muted">Contract: </span>
+        <a
+          href={`${ETHERSCAN_URL}/address/${contract}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-[11px] text-text-secondary hover:text-accent transition-colors"
+        >
+          {contract.slice(0, 12)}…{contract.slice(-8)}
+        </a>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="py-2.5 px-5 text-left text-xs font-medium text-text-muted uppercase tracking-widest">Role</th>
-              <th className="py-2.5 px-5 text-left text-xs font-medium text-text-muted uppercase tracking-widest">Address</th>
-              <th className="py-2.5 px-5 text-left text-xs font-medium text-text-muted uppercase tracking-widest">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              [...Array(4)].map((_, i) => (
-                <tr key={i}>
-                  {[100, 180, 60].map((w, j) => (
-                    <td key={j} className="py-3 px-5 border-b border-border/40">
-                      <div className="animate-pulse h-4 rounded bg-surface-3" style={{ width: w }} />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : error ? (
-              <tr>
-                <td colSpan={3} className="py-6 px-5 text-xs text-danger">
-                  {error}
-                </td>
-              </tr>
-            ) : holders.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="py-6 px-5 text-sm text-text-muted text-center">
-                  No role grants found in event history
-                </td>
-              </tr>
-            ) : (
-              holders.map((h, i) => (
-                <tr key={i} className="hover:bg-surface-2/40 transition-colors border-b border-border/40 last:border-0">
-                  <td className="py-3 px-5">
-                    <span className="font-mono text-xs font-medium text-accent">
-                      {h.roleLabel}
-                    </span>
-                  </td>
-                  <td className="py-3 px-5">
-                    <AddressTag address={h.address} showLabel etherscanLink copyable />
-                  </td>
-                  <td className="py-3 px-5">
-                    <StatusBadge
-                      variant={h.active ? "success" : "muted"}
-                      label={h.active ? "Active" : "Revoked"}
-                    />
-                  </td>
-                </tr>
-              ))
+      {/* Error */}
+      {error && (
+        <div className="px-5 py-3 text-xs text-danger">{error}</div>
+      )}
+
+      {/* Role groups */}
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {ROLE_GROUPS.map((group) => (
+          <RoleGroupCard
+            key={group.key}
+            group={group}
+            holders={holders.filter(
+              (h) => h.role.toLowerCase() === group.hash.toLowerCase()
             )}
-          </tbody>
-        </table>
+            loading={loading}
+          />
+        ))}
       </div>
     </div>
   );

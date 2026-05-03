@@ -119,14 +119,14 @@ export default function WhitelistPage() {
       {/* Page header */}
       <div>
         <h1 className="text-xl font-semibold text-text-primary">
-          Whitelist & Access Control
+          Access Control
         </h1>
         <p className="text-sm text-text-muted mt-0.5">
-          Role-based access control (RBAC) state on Ethereum mainnet
+          MPC workspace map — who controls each contract and what they can do
         </p>
       </div>
 
-      {/* Contract roles — both tokens side by side */}
+      {/* Strategy Manager Workspace Map — both contracts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <RoleDisplay
           contract={CONTRACTS.mTBILL.token}
