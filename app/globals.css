@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -19,22 +19,24 @@
 
   body {
     @apply bg-background text-text-primary font-sans antialiased;
+    background-image: radial-gradient(ellipse at 20% 0%, #1A2035 0%, #0B0E17 60%);
+    background-attachment: fixed;
     min-height: 100vh;
   }
 
-  /* Monospace for all address/hash elements */
+  /* Monospace only for addresses, hashes, calldata */
   .font-address {
     @apply font-mono text-sm tracking-tight;
   }
 
-  /* Scrollbar styling */
+  /* Scrollbar — subtle, professional */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-surface;
+    @apply bg-background;
   }
 
   ::-webkit-scrollbar-thumb {
@@ -42,97 +44,151 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-text-muted;
+    @apply bg-surface-3;
   }
 }
 
 @layer components {
-  /* Card base */
+  /* ── Cards ─────────────────────────────────────────────── */
+
+  /* Base card: subtle border, slight background lift */
   .card {
-    @apply bg-surface border border-border rounded-xl shadow-card;
+    @apply bg-surface border border-border/70 rounded-[12px] shadow-card;
   }
 
+  /* Interactive card: border brightens slightly on hover */
   .card-hover {
     @apply card transition-all duration-200 hover:shadow-card-hover hover:border-accent/20;
   }
 
-  /* Stat value style */
+  /* ── Typography helpers ────────────────────────────────── */
+
   .stat-value {
     @apply text-2xl font-semibold text-text-primary tabular-nums;
   }
 
   .stat-label {
-    @apply text-xs font-medium text-text-secondary uppercase tracking-widest;
+    @apply text-xs font-medium text-text-muted uppercase tracking-widest;
   }
 
-  /* Badge variants */
+  /* ── Status dots (4-6px, no flashy badges) ─────────────── */
+
+  .status-dot {
+    @apply w-1.5 h-1.5 rounded-full shrink-0;
+  }
+
+  .status-dot-success {
+    @apply status-dot bg-success;
+  }
+
+  .status-dot-warning {
+    @apply status-dot bg-warning;
+  }
+
+  .status-dot-danger {
+    @apply status-dot bg-danger;
+  }
+
+  .status-dot-muted {
+    @apply status-dot bg-text-muted;
+  }
+
+  /* ── Badges — minimal, not flashy ─────────────────────── */
+
   .badge {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium;
   }
 
   .badge-success {
-    @apply badge bg-success/10 text-success border border-success/20;
+    @apply badge bg-success/10 text-success;
   }
 
   .badge-danger {
-    @apply badge bg-danger/10 text-danger border border-danger/20;
+    @apply badge bg-danger/10 text-danger;
   }
 
   .badge-warning {
-    @apply badge bg-warning/10 text-warning border border-warning/20;
+    @apply badge bg-warning/10 text-warning;
   }
 
   .badge-accent {
-    @apply badge bg-accent/10 text-accent border border-accent/20;
+    @apply badge bg-accent/10 text-accent;
   }
 
-  /* Live pulse dot */
+  .badge-muted {
+    @apply badge bg-surface-3 text-text-muted;
+  }
+
+  /* Live pulse dot — small and unobtrusive */
   .live-dot {
-    @apply w-2 h-2 rounded-full bg-success animate-pulse;
+    @apply w-1.5 h-1.5 rounded-full bg-success animate-pulse;
   }
 
-  /* Table styles */
+  /* ── Tables ─────────────────────────────────────────────── */
+
+  /* Clean tables — no heavy zebra striping, subtle hover only */
   .data-table {
     @apply w-full text-sm;
   }
 
   .data-table th {
-    @apply text-xs font-medium text-text-muted uppercase tracking-widest py-3 px-4 border-b border-border text-left;
+    @apply text-xs font-medium text-text-muted uppercase tracking-widest py-3 px-4 border-b border-border/60 text-left bg-surface/50;
   }
 
   .data-table td {
-    @apply py-3 px-4 border-b border-border/50 text-text-primary;
+    @apply py-3 px-4 border-b border-border/30 text-text-primary;
   }
 
   .data-table tr:hover td {
-    @apply bg-surface-2/50;
+    @apply bg-surface-2/40;
   }
 
   .data-table tr:last-child td {
     @apply border-b-0;
   }
 
-  /* Input styles */
+  /* ── Inputs ─────────────────────────────────────────────── */
+
   .input {
-    @apply w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm text-text-primary
+    @apply w-full bg-surface-2 border border-border rounded-[8px] px-3 py-2 text-sm text-text-primary
            placeholder:text-text-muted font-mono
-           focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30
+           focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/20
            transition-colors duration-200;
   }
 
-  /* Button variants */
+  /* Regular (non-mono) input */
+  .input-text {
+    @apply input font-sans;
+  }
+
+  /* ── Buttons ────────────────────────────────────────────── */
+
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 bg-accent text-background rounded-lg text-sm font-semibold
-           hover:bg-accent-hover active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-[8px] text-sm font-semibold
+           hover:bg-accent-hover active:scale-[0.98] transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-4 py-2 bg-surface-2 border border-border text-text-primary rounded-lg text-sm font-medium
-           hover:border-accent/40 hover:bg-surface-3 active:scale-95 transition-all duration-150;
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-surface-2 border border-border text-text-primary rounded-[8px] text-sm font-medium
+           hover:border-accent/30 hover:bg-surface-3 active:scale-[0.98] transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 text-text-secondary rounded-lg text-sm font-medium
-           hover:text-text-primary hover:bg-surface-2 active:scale-95 transition-all duration-150;
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-text-secondary rounded-[8px] text-sm font-medium
+           hover:text-text-primary hover:bg-surface-2 active:scale-[0.98] transition-all duration-150;
+  }
+
+  /* ── Dividers ───────────────────────────────────────────── */
+
+  .divider {
+    @apply border-t border-border/60;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.25s ease-out;
   }
 }

@@ -9,46 +9,52 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Midas brand palette
-        background: "#0A0A0F",
-        surface: "#111118",
-        "surface-2": "#1A1A24",
-        "surface-3": "#22222E",
-        border: "#2A2A3A",
-        accent: "#00D4FF",
-        "accent-hover": "#00B8E0",
-        success: "#00C48C",
-        warning: "#FFB800",
-        danger: "#FF4444",
-        "text-primary": "#F0F0F8",
-        "text-secondary": "#9090A8",
-        "text-muted": "#60607A",
-        mint: "#00C48C",
-        burn: "#FF4444",
+        // Midas institutional palette — deep navy, not pure black
+        background: "#0B0E17",
+        surface: "#111827",
+        "surface-2": "#1A2035",
+        "surface-3": "#232B42",
+        border: "#2A3350",
+        accent: "#3B82F6",
+        "accent-hover": "#2563EB",
+        success: "#10B981",
+        warning: "#F59E0B",
+        danger: "#EF4444",
+        "text-primary": "#F1F5F9",
+        "text-secondary": "#94A3B8",
+        "text-muted": "#64748B",
+        mint: "#10B981",
+        burn: "#EF4444",
       },
       fontFamily: {
-        sans: ["Space Grotesk", "system-ui", "sans-serif"],
-        mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+      },
+      borderRadius: {
+        card: "12px",
+        input: "8px",
       },
       backgroundImage: {
+        // Subtle page-level gradient — not on cards
+        "gradient-page":
+          "radial-gradient(ellipse at 20% 0%, #1A2035 0%, #0B0E17 60%)",
         "gradient-surface":
-          "linear-gradient(135deg, #111118 0%, #0A0A0F 100%)",
-        "gradient-accent":
-          "linear-gradient(135deg, #00D4FF20 0%, #00D4FF05 100%)",
+          "linear-gradient(135deg, #111827 0%, #0B0E17 100%)",
       },
       boxShadow: {
-        card: "0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(42,42,58,0.6)",
+        // Clean, professional shadows — no glow
+        card: "0 1px 3px rgba(0,0,0,0.35), 0 0 0 1px rgba(42,51,80,0.7)",
         "card-hover":
-          "0 4px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,255,0.2)",
-        glow: "0 0 20px rgba(0,212,255,0.15)",
+          "0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(59,130,246,0.2)",
+        input: "0 1px 2px rgba(0,0,0,0.2), 0 0 0 1px rgba(42,51,80,0.8)",
       },
       animation: {
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "fade-in": "fadeIn 0.3s ease-in-out",
+        "fade-in": "fadeIn 0.25s ease-out",
       },
       keyframes: {
         fadeIn: {
-          "0%": { opacity: "0", transform: "translateY(4px)" },
+          "0%": { opacity: "0", transform: "translateY(3px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },

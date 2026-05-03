@@ -22,6 +22,11 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        {/* Inter (body + headings) and JetBrains Mono (addresses/code only) */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="bg-background text-text-primary font-sans antialiased min-h-screen">
         <Navbar />
