@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,17 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
+    /* Midas brand tint scale */
+    --tint-1:  255 255 255;
+    --tint-3:  247 247 248;
+    --tint-6:  229 229 231;
+    --tint-9:  131 133 137;
+    --tint-12: 29  29  29;
+    /* Brand blues */
+    --seg-A-color: #2782c4;
+    --seg-B-color: #43b7f2;
+    --seg-C-color: #8be2ff;
   }
 
   * {
@@ -19,9 +29,14 @@
 
   body {
     @apply bg-background text-text-primary font-sans antialiased;
-    background-image: radial-gradient(ellipse at 20% 0%, #1A2035 0%, #0B0E17 60%);
+    background-image: radial-gradient(ellipse at 20% 0%, #EEF4FB 0%, #FFFFFF 60%);
     background-attachment: fixed;
     min-height: 100vh;
+    color: rgb(var(--tint-12));
+  }
+
+  h1 {
+    letter-spacing: -0.025em;
   }
 
   /* Monospace only for addresses, hashes, calldata */
@@ -29,39 +44,38 @@
     @apply font-mono text-sm tracking-tight;
   }
 
-  /* Scrollbar — subtle, professional */
+  /* Scrollbar — subtle, light-mode */
   ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-background;
+    background: rgb(var(--tint-3));
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
+    background: rgb(var(--tint-6));
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-surface-3;
+    background: rgb(var(--tint-9));
   }
 }
 
 @layer components {
   /* ── Cards ─────────────────────────────────────────────── */
 
-  /* Base card: subtle border, slight background lift */
   .card {
-    @apply bg-surface border border-border/70 rounded-[12px] shadow-card;
+    @apply bg-surface border border-border rounded-[12px] shadow-card;
   }
 
-  /* Interactive card: border brightens slightly on hover */
   .card-hover {
-    @apply card transition-all duration-200 hover:shadow-card-hover hover:border-accent/20;
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:border-accent/30;
   }
 
-  /* ── Typography helpers ────────────────────────────────── */
+  /* ── Typography helpers ─────────────────────────────────── */
 
   .stat-value {
     @apply text-2xl font-semibold text-text-primary tabular-nums;
@@ -71,7 +85,7 @@
     @apply text-xs font-medium text-text-muted uppercase tracking-widest;
   }
 
-  /* ── Status dots (4-6px, no flashy badges) ─────────────── */
+  /* ── Status dots ─────────────────────────────────────────── */
 
   .status-dot {
     @apply w-1.5 h-1.5 rounded-full shrink-0;
@@ -93,7 +107,7 @@
     @apply status-dot bg-text-muted;
   }
 
-  /* ── Badges — minimal, not flashy ─────────────────────── */
+  /* ── Badges ─────────────────────────────────────────────── */
 
   .badge {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium;
@@ -119,28 +133,27 @@
     @apply badge bg-surface-3 text-text-muted;
   }
 
-  /* Live pulse dot — small and unobtrusive */
   .live-dot {
     @apply w-1.5 h-1.5 rounded-full bg-success animate-pulse;
   }
 
   /* ── Tables ─────────────────────────────────────────────── */
 
-  /* Clean tables — no heavy zebra striping, subtle hover only */
   .data-table {
     @apply w-full text-sm;
   }
 
   .data-table th {
-    @apply text-xs font-medium text-text-muted uppercase tracking-widest py-3 px-4 border-b border-border/60 text-left bg-surface/50;
+    @apply text-xs font-medium text-text-muted uppercase tracking-widest
+           py-3 px-4 border-b border-border text-left bg-surface-2/60;
   }
 
   .data-table td {
-    @apply py-3 px-4 border-b border-border/30 text-text-primary;
+    @apply py-3 px-4 border-b border-border/60 text-text-primary;
   }
 
   .data-table tr:hover td {
-    @apply bg-surface-2/40;
+    @apply bg-surface-2/60;
   }
 
   .data-table tr:last-child td {
@@ -150,40 +163,49 @@
   /* ── Inputs ─────────────────────────────────────────────── */
 
   .input {
-    @apply w-full bg-surface-2 border border-border rounded-[8px] px-3 py-2 text-sm text-text-primary
-           placeholder:text-text-muted font-mono
-           focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/20
+    @apply w-full bg-white border border-border rounded-[8px] px-3 py-2
+           text-sm text-text-primary placeholder:text-text-muted font-mono
+           shadow-input
+           focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/10
            transition-colors duration-200;
   }
 
-  /* Regular (non-mono) input */
   .input-text {
     @apply input font-sans;
   }
 
-  /* ── Buttons ────────────────────────────────────────────── */
+  /* ── Buttons ─────────────────────────────────────────────── */
 
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-[8px] text-sm font-semibold
-           hover:bg-accent-hover active:scale-[0.98] transition-all duration-150
-           disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 px-4 py-2
+           bg-accent text-white rounded-[8px] text-sm font-semibold
+           hover:bg-accent-hover active:scale-[0.98]
+           transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed
+           shadow-sm;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-4 py-2 bg-surface-2 border border-border text-text-primary rounded-[8px] text-sm font-medium
-           hover:border-accent/30 hover:bg-surface-3 active:scale-[0.98] transition-all duration-150
-           disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 px-4 py-2
+           bg-white border border-border text-text-primary rounded-[8px]
+           text-sm font-medium
+           hover:border-accent/40 hover:bg-surface active:scale-[0.98]
+           transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed
+           shadow-sm;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 text-text-secondary rounded-[8px] text-sm font-medium
-           hover:text-text-primary hover:bg-surface-2 active:scale-[0.98] transition-all duration-150;
+    @apply inline-flex items-center gap-2 px-3 py-1.5
+           text-text-secondary rounded-[8px] text-sm font-medium
+           hover:text-text-primary hover:bg-surface-2
+           active:scale-[0.98] transition-all duration-150;
   }
 
-  /* ── Dividers ───────────────────────────────────────────── */
+  /* ── Dividers ─────────────────────────────────────────────── */
 
   .divider {
-    @apply border-t border-border/60;
+    @apply border-t border-border;
   }
 }
 

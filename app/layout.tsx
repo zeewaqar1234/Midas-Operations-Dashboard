@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "Midas Operations Dashboard",
@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -24,15 +24,21 @@ export default function RootLayout({
         />
         {/* Inter (body + headings) and JetBrains Mono (addresses/code only) */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className="bg-background text-text-primary font-sans antialiased min-h-screen">
-        <Navbar />
-        <main className="mx-auto max-w-screen-2xl px-4 sm:px-6 py-8">
-          {children}
-        </main>
+        {/* Sidebar + main content side-by-side */}
+        <div className="flex min-h-screen">
+          <Sidebar />
+          {/* Main content — offset to the right of the fixed sidebar */}
+          <main className="flex-1 ml-[220px] min-h-screen">
+            <div className="max-w-screen-xl mx-auto px-6 py-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </body>
     </html>
   );
