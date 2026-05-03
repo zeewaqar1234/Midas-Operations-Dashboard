@@ -1,0 +1,65 @@
+Here's the full implementation plan I've created, broken into 11 phases:
+
+Phase 1 — Project Scaffolding
+
+Initialize Next.js 14+ with App Router and TypeScript
+Set up Tailwind CSS with Midas's dark color palette (#0A0A0F backgrounds, #00D4FF accent, etc.)
+Install core deps: viem, recharts, lucide-react
+Configure fonts: Space Grotesk (headings), IBM Plex Mono (addresses/data)
+Phase 2 — Core Lib Layer
+
+lib/constants.ts — contract addresses, role hashes (MINTER_ROLE, BURNER_ROLE), known address labels
+lib/contracts.ts — ABIs (ERC-20, AccessControl, Oracle, Midas-specific)
+lib/viem-client.ts — public client connected to Ethereum mainnet via Alchemy
+lib/etherscan.ts — API wrapper for token txs, holders, event logs
+lib/decoder.ts — ABI decoder utilities using viem's decodeFunctionData
+lib/formatters.ts — number formatting, address truncation
+Phase 3 — Shared Components
+
+Navbar.tsx — top nav with 5 tab links + connection indicator
+AddressTag.tsx — truncated address (0xABCD...1234) with copy-to-clipboard
+StatusBadge.tsx — status indicators (success, warning, error)
+Root layout.tsx — dark theme shell, font loading, nav integration
+Phase 4 — Custom Hooks
+
+useTokenData.ts — fetches totalSupply, NAV price, holder count, calculates AUM
+useTransactions.ts — fetches mint/burn Transfer events from Etherscan
+useRoles.ts — checks hasRole() for addresses against Midas contracts
+Phase 5 — Tab 1: Token Overview & NAV Monitor
+
+Token cards for mTBILL and mBASIS (NAV, supply, holders, 24h change)
+Portfolio summary card (total AUM, total holders, product count)
+NAV price history line chart (30 days, Recharts)
+Auto-refresh every 60 seconds with visible countdown
+Phase 6 — Tab 2: Transaction Monitor (HIGHEST PRIORITY)
+
+Sortable mint/burn transaction table
+Smart contract function decoder (paste tx hash → decoded calldata)
+Expandable transaction detail panel
+Filters: token (mTBILL/mBASIS/All), type (Mint/Burn/All), date range
+Etherscan links for every tx hash
+Phase 7 — Tab 3: Whitelist & Access Control Manager
+
+Contract roles table (admin, minter, burner with active addresses)
+Address lookup: check balances, roles, interaction history
+Whitelist simulation form (generates mock calldata + gas estimate)
+Recent RoleGranted/RoleRevoked event feed
+Phase 8 — Tab 4: Block Explorer & Wallet Analyzer
+
+Top holders table with % of supply
+Holder concentration pie chart
+Wallet deep dive (balances, ETH balance, interaction timeline)
+Daily net mint/burn volume bar chart
+Phase 9 — Tab 5: Operational Runbook
+
+6 interactive workflow diagrams (Subscription, Redemption, Product Launch, Whitelist Update, NAV Update, Incident Response)
+Interactive operational checklists
+Auto-detected risk flags (oracle staleness from real data)
+Phase 10 — Polish & Deploy
+
+Loading skeletons, error handling, responsive tweaks
+.env.local setup for API keys
+Deploy to Vercel with live URL
+Phase 11 — Git: Push to GitHub
+
+Commit everything and push to https://github.com/zeewaqar1234/Midas-Operations-Dashboard
