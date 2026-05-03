@@ -79,6 +79,21 @@ export const ETHERSCAN_URL = "https://etherscan.io";
 export const ZERO_ADDRESS =
   "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
+// ─── Known DeFi Protocol Addresses ───────────────────────────────────────────
+// Used by the Protocol Distribution tab to check balanceOf on each protocol
+
+export const PROTOCOL_ADDRESSES: Record<
+  string,
+  { label: string; address: `0x${string}`; type: string; url: string }
+> = {
+  morpho: {
+    label: "Morpho Blue",
+    address: "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
+    type: "Lending Protocol",
+    url: "https://app.morpho.org",
+  },
+};
+
 // ─── Known Midas function signatures ─────────────────────────────────────────
 
 export const KNOWN_SELECTORS: Record<string, string> = {
@@ -93,4 +108,7 @@ export const KNOWN_SELECTORS: Record<string, string> = {
   "0x23b872dd": "transferFrom(address,address,uint256)",
   "0x2f2ff15d": "grantRole(bytes32,address)",
   "0xd547741f": "revokeRole(bytes32,address)",
+  "0x47e7ef24": "deposit(address,uint256)",
+  "0xba087652": "depositRequest(uint256,address,address)",
+  "0x9470b0bd": "withdrawRequest(uint256,address,address)",
 };
