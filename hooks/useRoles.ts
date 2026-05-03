@@ -174,22 +174,25 @@ export function useRoles(): UseRolesReturn {
       try {
         const addr = address as `0x${string}`;
 
+        const { ERC20_ABI: erc20 } = await import("@/lib/contracts");
+
+        // Fetch balances and role checks in a single parallel batch
         const [
-          mTBILLBalance,
+          mTBILLBal,
           mTBILLAdmin,
           mTBILLMinter,
           mTBILLBurner,
-          mBASISBalance,
+          mBASISBal,
           mBASISAdmin,
           mBASISMinter,
           mBASISBurner,
         ] = await Promise.all([
           publicClient.readContract({
             address: CONTRACTS.mTBILL.token,
-            abi: ACCESS_CONTROL_ABI,
-            functionName: "hasRole",
-            args: [ROLES.DEFAULT_ADMIN_ROLE, addr],
-          }).catch(() => false as boolean),
+            abi: erc20,
+            functionName: "balanceOf",
+            args: [addr],
+          }).catch(() => BigInt(0)),
           publicClient.readContract({
             address: CONTRACTS.mTBILL.token,
             abi: ACCESS_CONTROL_ABI,
@@ -210,10 +213,10 @@ export function useRoles(): UseRolesReturn {
           }).catch(() => false as boolean),
           publicClient.readContract({
             address: CONTRACTS.mBASIS.token,
-            abi: ACCESS_CONTROL_ABI,
-            functionName: "hasRole",
-            args: [ROLES.DEFAULT_ADMIN_ROLE, addr],
-          }).catch(() => false as boolean),
+            abi: erc20,
+            functionName: "balanceOf",
+            args: [addr],
+          }).catch(() => BigInt(0)),
           publicClient.readContract({
             address: CONTRACTS.mBASIS.token,
             abi: ACCESS_CONTROL_ABI,
@@ -232,35 +235,18 @@ export function useRoles(): UseRolesReturn {
             functionName: "hasRole",
             args: [ROLES.BURNER_ROLE, addr],
           }).catch(() => false as boolean),
-        ]);
-
-        // Fetch ERC-20 balances separately (different ABI)
-        const { ERC20_ABI: erc20 } = await import("@/lib/contracts");
-        const [mTBILLBal, mBASISBal] = await Promise.all([
-          publicClient.readContract({
-            address: CONTRACTS.mTBILL.token,
-            abi: erc20,
-            functionName: "balanceOf",
-            args: [addr],
-          }).catch(() => BigInt(0)),
-          publicClient.readContract({
-            address: CONTRACTS.mBASIS.token,
-            abi: erc20,
-            functionName: "balanceOf",
-            args: [addr],
-          }).catch(() => BigInt(0)),
         ]);
 
         return {
           address,
           mTBILL: {
-            balance: mTBILLBal,
+            balance: mTBILLBal as bigint,
             hasAdminRole: Boolean(mTBILLAdmin),
             hasMinterRole: Boolean(mTBILLMinter),
             hasBurnerRole: Boolean(mTBILLBurner),
           },
           mBASIS: {
-            balance: mBASISBal,
+            balance: mBASISBal as bigint,
             hasAdminRole: Boolean(mBASISAdmin),
             hasMinterRole: Boolean(mBASISMinter),
             hasBurnerRole: Boolean(mBASISBurner),
