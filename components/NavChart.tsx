@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import type { NavPoint } from "@/hooks/useNavHistory";
 
@@ -32,9 +33,9 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface-2 border border-border rounded-lg px-3 py-2 shadow-card text-xs">
+    <div className="bg-surface-2 border border-border/70 rounded-[8px] px-3 py-2 shadow-card text-xs">
       <div className="text-text-muted mb-1">{label}</div>
-      <div className="font-semibold text-text-primary">
+      <div className="font-semibold text-text-primary tabular-nums">
         ${payload[0].value.toFixed(6)}
       </div>
     </div>
@@ -43,26 +44,12 @@ function CustomTooltip({
 
 function Skeleton() {
   return (
-    <div className="animate-pulse h-full flex flex-col justify-end gap-1 px-2">
-      {[70, 50, 80, 60, 90, 75, 85].map((h, i) => (
-        <div
-          key={i}
-          className="bg-surface-3 rounded"
-          style={{ height: `${h}%` }}
-        />
-      ))}
-    </div>
+    <div className="h-56 w-full animate-pulse rounded-[8px] bg-surface-3" />
   );
 }
 
 export default function NavChart({ data, loading }: NavChartProps) {
-  if (loading) {
-    return (
-      <div className="h-56 flex items-center justify-center">
-        <Skeleton />
-      </div>
-    );
-  }
+  if (loading) return <Skeleton />;
 
   if (!data.length) {
     return (
@@ -72,41 +59,63 @@ export default function NavChart({ data, loading }: NavChartProps) {
     );
   }
 
-  const minPrice = Math.min(...data.map((d) => d.price));
-  const maxPrice = Math.max(...data.map((d) => d.price));
-  const padding = (maxPrice - minPrice) * 0.05 || 0.001;
+  const prices = data.map((d) => d.price);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const padding = (maxPrice - minPrice) * 0.08 || 0.001;
+
+  // Include $1.00 in domain so the reference line is always visible
+  const domainMin = Math.min(minPrice - padding, 0.998);
+  const domainMax = maxPrice + padding;
 
   return (
     <ResponsiveContainer width="100%" height={224}>
       <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
         <CartesianGrid
           strokeDasharray="3 3"
-          stroke="#2A2A3A"
+          stroke="#2A3350"
           vertical={false}
+          opacity={0.6}
         />
         <XAxis
           dataKey="date"
-          tick={{ fill: "#60607A", fontSize: 11, fontFamily: "inherit" }}
+          tick={{ fill: "#64748B", fontSize: 11, fontFamily: "Inter, sans-serif" }}
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
         />
         <YAxis
-          domain={[minPrice - padding, maxPrice + padding]}
-          tick={{ fill: "#60607A", fontSize: 11, fontFamily: "inherit" }}
+          domain={[domainMin, domainMax]}
+          tick={{ fill: "#64748B", fontSize: 11, fontFamily: "Inter, sans-serif" }}
           tickLine={false}
           axisLine={false}
           tickFormatter={(v: number) => `$${v.toFixed(3)}`}
           width={64}
         />
         <Tooltip content={<CustomTooltip />} />
+
+        {/* $1.00 reference line — shows yield accumulation above par */}
+        <ReferenceLine
+          y={1.0}
+          stroke="#64748B"
+          strokeDasharray="4 4"
+          strokeWidth={1}
+          label={{
+            value: "$1.00 par",
+            position: "insideTopLeft",
+            fill: "#64748B",
+            fontSize: 10,
+            fontFamily: "Inter, sans-serif",
+          }}
+        />
+
         <Line
           type="monotone"
           dataKey="price"
-          stroke="#00D4FF"
+          stroke="#3B82F6"
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 4, fill: "#00D4FF", strokeWidth: 0 }}
+          activeDot={{ r: 4, fill: "#3B82F6", strokeWidth: 0 }}
         />
       </LineChart>
     </ResponsiveContainer>

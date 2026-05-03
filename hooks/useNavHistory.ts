@@ -19,6 +19,7 @@ export interface UseNavHistoryReturn {
   loading: boolean;
   error: string | null;
   currentPrice: number | null;
+  nav30dAgo: number | null; // price closest to 30 days ago — used for implied yield
   oracleDecimals: number;
 }
 
@@ -32,14 +33,14 @@ export function useNavHistory(): UseNavHistoryReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [nav30dAgo, setNav30dAgo] = useState<number | null>(null);
   const [oracleDecimals, setOracleDecimals] = useState(8);
 
   useEffect(() => {
-    async function fetch() {
+    async function fetchHistory() {
       setLoading(true);
       setError(null);
       try {
-        // Get oracle decimals + latest price
         const [decimals, latest] = await Promise.all([
           publicClient.readContract({
             address: CONTRACTS.mTBILL.oracle,
@@ -61,7 +62,6 @@ export function useNavHistory(): UseNavHistoryReturn {
             : null;
         setCurrentPrice(latestPrice);
 
-        // Pull AnswerUpdated events (last ~100 oracle updates)
         const logs = await getEventLogs(
           CONTRACTS.mTBILL.oracle,
           ANSWER_UPDATED_TOPIC,
@@ -69,7 +69,6 @@ export function useNavHistory(): UseNavHistoryReturn {
         );
 
         if (logs.length === 0) {
-          // No event history — build a flat line from latest price
           if (latestPrice) {
             const now = Date.now();
             const points: NavPoint[] = Array.from({ length: 30 }, (_, i) => {
@@ -84,19 +83,20 @@ export function useNavHistory(): UseNavHistoryReturn {
               };
             });
             setData(points);
+            setNav30dAgo(latestPrice);
           }
           return;
         }
 
-        // Parse event logs: topics[1] = current (int256, indexed)
         const points: NavPoint[] = logs
           .map((log) => {
             const rawAnswer = log.topics[1];
             if (!rawAnswer) return null;
-            // topics are 32-byte hex — parse as signed int256
             const answer = BigInt(rawAnswer);
-            // Handle two's complement for negative (shouldn't be for NAV but be safe)
-            const price = formatOraclePrice(answer > BigInt(0) ? answer : BigInt(0), decimals);
+            const price = formatOraclePrice(
+              answer > BigInt(0) ? answer : BigInt(0),
+              decimals
+            );
             const ts = parseInt(log.timeStamp, 16) * 1000;
             return {
               date: new Date(ts).toLocaleDateString("en-US", {
@@ -116,7 +116,19 @@ export function useNavHistory(): UseNavHistoryReturn {
           byDay.set(p.date, p);
         }
 
-        setData(Array.from(byDay.values()).slice(-30));
+        const sorted = Array.from(byDay.values()).slice(-30);
+        setData(sorted);
+
+        // Find the price closest to 30 days ago for yield calculation
+        const thirtyDaysAgo = Date.now() - 30 * 86400 * 1000;
+        const closest = sorted.reduce<NavPoint | null>((best, p) => {
+          if (!best) return p;
+          return Math.abs(p.timestamp - thirtyDaysAgo) <
+            Math.abs(best.timestamp - thirtyDaysAgo)
+            ? p
+            : best;
+        }, null);
+        setNav30dAgo(closest?.price ?? null);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch NAV history"
@@ -126,8 +138,8 @@ export function useNavHistory(): UseNavHistoryReturn {
       }
     }
 
-    fetch();
+    fetchHistory();
   }, []);
 
-  return { data, loading, error, currentPrice, oracleDecimals };
+  return { data, loading, error, currentPrice, nav30dAgo, oracleDecimals };
 }
