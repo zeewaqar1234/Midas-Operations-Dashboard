@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -332,9 +332,8 @@ export default function TransactionTable({
               const counterparty = tx.eventType === "mint" ? tx.to : tx.from;
 
               return (
-                <>
+                <React.Fragment key={tx.hash}>
                   <tr
-                    key={tx.hash}
                     onClick={() => toggleRow(tx.hash)}
                     className={`cursor-pointer transition-colors ${
                       isExpanded ? "bg-accent/5" : "hover:bg-surface-2/40"
@@ -382,13 +381,12 @@ export default function TransactionTable({
 
                   {isExpanded && (
                     <DetailPanel
-                      key={`detail-${tx.hash}`}
                       tx={tx}
                       detail={details[tx.hash] ?? null}
                       detailLoading={detailLoading[tx.hash] ?? true}
                     />
                   )}
-                </>
+                </React.Fragment>
               );
             })
           )}

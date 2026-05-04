@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Midas Operations Dashboard — Project Briefing</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '\\(', right: '\\)', display: false}
+      ]
+    });"></script>
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 10.5pt; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #1d1d1d;
+      background: #fff;
+      line-height: 1.65;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ── Page layout ──────────────────────────────────── */
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 48px 60px;
+    }
+
+    /* ── Cover ────────────────────────────────────────── */
+    .cover {
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 36px;
+      border-bottom: 2px solid #2782C4;
+      margin-bottom: 48px;
+    }
+    .cover-label {
+      font-size: 9pt;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #2782C4;
+      margin-bottom: 12px;
+    }
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: #1d1d1d;
+      margin-bottom: 14px;
+    }
+    .cover-sub {
+      font-size: 11pt;
+      color: #636366;
+      max-width: 520px;
+      line-height: 1.55;
+    }
+    .cover-meta {
+      margin-top: 24px;
+      display: flex;
+      gap: 32px;
+      font-size: 8.5pt;
+      color: #838589;
+    }
+    .cover-meta span strong {
+      color: #1d1d1d;
+      font-weight: 600;
+    }
+
+    /* ── Table of contents ────────────────────────────── */
+    .toc {
+      background: #F7F7F8;
+      border: 1px solid #E5E5E7;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 48px;
+    }
+    .toc-title {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #838589;
+      margin-bottom: 12px;
+    }
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .toc-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+      font-size: 9.5pt;
+      color: #636366;
+    }
+    .toc-list li .toc-num {
+      color: #2782C4;
+      font-weight: 700;
+      font-size: 8.5pt;
+      width: 22px;
+      shrink: 0;
+    }
+
+    /* ── Sections ─────────────────────────────────────── */
+    section { margin-bottom: 44px; }
+
+    .section-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #2782C4;
+      margin-bottom: 6px;
+    }
+    h2 {
+      font-size: 17pt;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: #1d1d1d;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    h3 {
+      font-size: 12pt;
+      font-weight: 600;
+      color: #1d1d1d;
+      margin-bottom: 10px;
+      margin-top: 22px;
+    }
+    h4 {
+      font-size: 10pt;
+      font-weight: 600;
+      color: #2782C4;
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+    p {
+      font-size: 10pt;
+      color: #1d1d1d;
+      margin-bottom: 12px;
+      line-height: 1.7;
+    }
+    p.muted {
+      color: #636366;
+      font-size: 9.5pt;
+    }
+
+    /* ── Lists ────────────────────────────────────────── */
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+    li {
+      font-size: 10pt;
+      color: #1d1d1d;
+      margin-bottom: 5px;
+      line-height: 1.6;
+    }
+    li strong { color: #1d1d1d; }
+
+    /* ── Callout boxes ────────────────────────────────── */
+    .callout {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 18px 0;
+      border-left: 3px solid;
+    }
+    .callout-blue {
+      background: #EEF4FB;
+      border-color: #2782C4;
+    }
+    .callout-green {
+      background: #F0FDF4;
+      border-color: #10B981;
+    }
+    .callout-amber {
+      background: #FFFBEB;
+      border-color: #F59E0B;
+    }
+    .callout p { margin-bottom: 0; }
+    .callout-label {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 5px;
+    }
+    .callout-blue .callout-label  { color: #2782C4; }
+    .callout-green .callout-label { color: #10B981; }
+    .callout-amber .callout-label { color: #D97706; }
+
+    /* ── Math blocks ──────────────────────────────────── */
+    .math-block {
+      background: #F7F7F8;
+      border: 1px solid #E5E5E7;
+      border-radius: 8px;
+      padding: 18px 24px;
+      margin: 18px 0;
+      text-align: center;
+    }
+    .math-block .math-label {
+      font-size: 8pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #838589;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .math-block .katex-display { margin: 0; }
+
+    .math-inline-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .math-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #F7F7F8;
+      border: 1px solid #E5E5E7;
+      border-radius: 6px;
+      padding: 10px 16px;
+    }
+    .math-row .math-name {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: #2782C4;
+      min-width: 160px;
+      shrink: 0;
+    }
+
+    /* ── Flow diagram ─────────────────────────────────── */
+    .flow {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0;
+      margin: 18px 0;
+    }
+    .flow-step {
+      background: #EEF4FB;
+      border: 1px solid #B3D4EE;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 9pt;
+      font-weight: 500;
+      color: #1d1d1d;
+      white-space: nowrap;
+    }
+    .flow-arrow {
+      font-size: 12pt;
+      color: #2782C4;
+      padding: 0 6px;
+      font-weight: 700;
+    }
+    .flow-step.highlight {
+      background: #2782C4;
+      border-color: #2782C4;
+      color: #fff;
+    }
+    .flow-step.success {
+      background: #F0FDF4;
+      border-color: #86EFAC;
+      color: #15803D;
+    }
+    .flow-step.warning {
+      background: #FFFBEB;
+      border-color: #FCD34D;
+      color: #92400E;
+    }
+
+    /* ── Tab cards ────────────────────────────────────── */
+    .tab-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .tab-card {
+      border: 1px solid #E5E5E7;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .tab-card-name {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #2782C4;
+      margin-bottom: 5px;
+    }
+    .tab-card-desc {
+      font-size: 9pt;
+      color: #636366;
+      line-height: 1.55;
+    }
+
+    /* ── Data source table ────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 9.5pt;
+    }
+    th {
+      background: #F7F7F8;
+      border: 1px solid #E5E5E7;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #636366;
+      font-size: 8.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    td {
+      border: 1px solid #E5E5E7;
+      padding: 8px 12px;
+      color: #1d1d1d;
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: #FAFAFA; }
+
+    /* ── Divider ──────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid #E5E5E7;
+      margin: 36px 0;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt;
+      background: #F7F7F8;
+      border: 1px solid #E5E5E7;
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #2782C4;
+    }
+
+    /* ── Print styles ─────────────────────────────────── */
+    @media print {
+      body { font-size: 10pt; }
+      .page { padding: 32px 40px 48px; }
+      .cover { page-break-after: always; min-height: 200px; }
+      section { page-break-inside: avoid; }
+      .math-block, .callout, .flow, .tab-grid, table { page-break-inside: avoid; }
+      a { color: #2782C4; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════════ COVER -->
+  <div class="cover">
+    <div class="cover-label">Internal Project Briefing</div>
+    <div class="cover-title">Midas Operations<br>Dashboard</div>
+    <div class="cover-sub">
+      A plain-language guide to what this dashboard does, where every number comes from, 
+      why each calculation was built, and how to explain it in a conversation.
+    </div>
+    <div class="cover-meta">
+      <span><strong>Author</strong><br>Syed Zee Waqar Hussain</span>
+      <span><strong>Version</strong><br>1.0 — May 2026</span>
+      <span><strong>Stack</strong><br>Next.js · Ethereum Mainnet · Etherscan API</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ TOC -->
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">1.</span> What is Midas? The business in one paragraph</li>
+      <li><span class="toc-num">2.</span> The two products — mTBILL and mBASIS</li>
+      <li><span class="toc-num">3.</span> How the NAV price works — the oracle mechanism</li>
+      <li><span class="toc-num">4.</span> Subscriptions and Redemptions — the full lifecycle</li>
+      <li><span class="toc-num">5.</span> The key metrics — where every number comes from</li>
+      <li><span class="toc-num">6.</span> The five dashboard tabs — what each one does</li>
+      <li><span class="toc-num">7.</span> Where the data comes from</li>
+      <li><span class="toc-num">8.</span> What you can confidently explain in an interview</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SECTION 1 -->
+  <section>
+    <div class="section-label">Section 1</div>
+    <h2>What is Midas?</h2>
+
+    <p>
+      Midas is a Berlin-based fintech that takes traditional financial products — specifically 
+      US Treasury bills and a crypto basis trade strategy — and makes them accessible on 
+      the Ethereum blockchain as standard ERC-20 tokens.
+    </p>
+    <p>
+      Think of it this way: instead of a fund manager giving you a PDF statement that says 
+      "you own $50,000 of T-bills," Midas gives you 50,000 digital tokens in your crypto wallet 
+      that represent exactly that claim. Each token is always redeemable for its current USD value.
+    </p>
+
+    <div class="callout callout-blue">
+      <div class="callout-label">The core idea</div>
+      <p>
+        Tokenization = taking a real-world financial asset and representing ownership of it 
+        as an on-chain token. Midas issues these tokens (mTokens), manages the underlying 
+        assets off-chain, and runs the on-chain infrastructure (smart contracts, oracle, 
+        custody) that connects the two worlds.
+      </p>
+    </div>
+
+    <p>
+      The dashboard was built as an <strong>internal operations tool</strong> — not something 
+      investors see. Its job is to let the operations team check the protocol's health in 
+      real time: Is the price feed current? Are investors subscribing or redeeming? 
+      Who has permission to mint new tokens?
+    </p>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════════════════════════════════ SECTION 2 -->
+  <section>
+    <div class="section-label">Section 2</div>
+    <h2>The Two Products</h2>
+
+    <h3>mTBILL — Tokenized T-Bill Exposure</h3>
+    <p>
+      mTBILL gives holders the economic return of holding short-duration US Treasury bills.
+      The underlying assets are actual T-bills held in a segregated account (custodied 
+      via a Luxembourg SPV structure). 
+    </p>
+    <p>
+      The token's NAV (Net Asset Value) starts at $1.00 on day one and <em>slowly climbs</em> 
+      over time as the T-bills accrue interest. If the current T-bill yield is roughly 5% per 
+      year, then after one year the NAV is approximately $1.05. This is how the holder earns 
+      a return — not through dividends or coupon payments, but through the rising price of the 
+      token itself.
+    </p>
+
+    <div class="callout callout-green">
+      <div class="callout-label">Simple analogy</div>
+      <p>
+        mTBILL is like a money market fund unit that you can send to anyone on Ethereum 
+        in the same transaction as any other token. The price goes up daily, reflecting 
+        the yield of the underlying T-bills.
+      </p>
+    </div>
+
+    <h3>mBASIS — Tokenized Basis Trade</h3>
+    <p>
+      A basis trade in crypto means: go long on spot Bitcoin or Ethereum (buy the actual 
+      asset), and simultaneously open a short position on the equivalent futures contract. 
+      The profit comes from the difference in price between the spot market and the futures 
+      market — this difference is called the <strong>basis</strong>.
+    </p>
+    <p>
+      In most market conditions, crypto futures trade at a premium to spot (because traders 
+      are willing to pay more for future delivery). This premium, collected repeatedly, 
+      generates the yield for mBASIS holders.
+    </p>
+
+    <div class="callout callout-amber">
+      <div class="callout-label">Key difference from mTBILL</div>
+      <p>
+        mTBILL has an on-chain oracle that publishes its price daily. mBASIS has no 
+        public oracle — its NAV is reported directly by the strategy manager. This is why 
+        the dashboard shows "Via strategy manager" for mBASIS pricing, not a live feed.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════════════════════════════════ SECTION 3 -->
+  <section>
+    <div class="section-label">Section 3</div>
+    <h2>How the NAV Price Works</h2>
+
+    <p>
+      Every time an investor subscribes to mTBILL or redeems it, the protocol needs a 
+      fair, tamper-proof price to use. That price is stored on the Ethereum blockchain 
+      through a system called an <strong>oracle</strong>.
+    </p>
+    <p>
+      The Midas oracle follows the Chainlink price feed standard. Chainlink is the 
+      industry-standard system for pushing off-chain data (like prices) onto a 
+      blockchain in a verifiable way. Midas uses the same interface but operates 
+      its own oracle, controlled through its MPC workspace.
+    </p>
+
+    <h4>How the daily update works</h4>
+    <div class="flow">
+      <div class="flow-step warning">Strategy manager reports NAV</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Midas cross-checks vs Bloomberg</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step warning">Fee deducted</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">Oracle updated on-chain</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step success">Subscriptions & redemptions open</div>
+    </div>
+
+    <h4>The staleness check</h4>
+    <p>
+      Once the oracle is updated, the timestamp of the last update is stored on-chain. 
+      The dashboard checks this timestamp on every load. If more than 24 hours have 
+      passed without an update, the dashboard raises a <strong>risk flag</strong> and the 
+      instant subscription/redemption mode should be paused — because using a stale price 
+      could be unfair to investors.
+    </p>
+
+    <h4>AUM — Total Assets Under Management</h4>
+    <p>
+      At any given moment, the Total AUM of a product is simply:
+    </p>
+
+    <div class="math-block">
+      <div class="math-label">Formula 1 — Assets Under Management</div>
+      $$\text{AUM} = \text{Total Supply} \times \text{NAV Price}$$
+    </div>
+
+    <p>
+      For example: if there are 10,000,000 mTBILL tokens in circulation, and the current 
+      NAV price is $1.0487, then the AUM is $10,487,000. Every time the strategy manager 
+      pushes a new NAV, this number updates automatically across the whole protocol.
+    </p>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════════════════════════════════ SECTION 4 -->
+  <section>
+    <div class="section-label">Section 4</div>
+    <h2>Subscriptions and Redemptions</h2>
+
+    <p>
+      Because mTokens represent real financial products, you cannot simply buy them on a 
+      crypto exchange. Investors must go through a formal process — just like subscribing 
+      to a fund — to ensure KYC compliance and correct pricing.
+    </p>
+
+    <h3>Subscription (Mint)</h3>
+    <p>
+      When an investor wants to subscribe, they send USDC (a USD-pegged stablecoin) to 
+      the Midas deposit address. In return, the operations team mints the corresponding 
+      amount of mTokens at the current NAV price.
+    </p>
+
+    <div class="flow">
+      <div class="flow-step warning">KYC check</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">USDC received</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Oracle NAV read</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">Tokens minted</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step success">Investor wallet credited</div>
+    </div>
+
+    <h4>Two Settlement Modes</h4>
+    <ul>
+      <li>
+        <strong>Instant mode:</strong> if the MSL liquidity pool has enough USDC 
+        (typically up to 10% of TVL), the investor gets tokens in the same blockchain 
+        transaction. Settlement is near-instant.
+      </li>
+      <li>
+        <strong>Standard mode:</strong> the request is queued, the strategy manager 
+        deploys capital into the underlying assets, and tokens are minted within 
+        T+2 to T+7 business days. This is equivalent to fund standard settlement.
+      </li>
+    </ul>
+
+    <h3>Redemption (Burn)</h3>
+    <p>
+      To redeem, the investor sends their mTokens back to the protocol. The operations 
+      team burns (destroys) the tokens and sends USDC back to the investor's wallet at 
+      the current NAV price.
+    </p>
+
+    <div class="callout callout-blue">
+      <div class="callout-label">Why "mint" and "burn"?</div>
+      <p>
+        In blockchain terminology, <em>minting</em> means creating new tokens, and 
+        <em>burning</em> means permanently destroying them. Both events are permanently 
+        recorded on-chain and are visible to anyone on Etherscan. The dashboard reads 
+        these events to track all capital flows in real time.
+      </p>
+    </div>
+
+    <h3>The MPC Workspace</h3>
+    <p>
+      Neither subscriptions nor redemptions happen automatically. Every mint and burn 
+      transaction must be signed through the MPC (Multi-Party Computation) workspace — 
+      typically Fordefi. This means:
+    </p>
+    <ul>
+      <li>The strategy manager can <em>propose</em> a transaction</li>
+      <li>Midas must <em>co-sign</em> it before it broadcasts to the network</li>
+      <li>This is the "2-of-N quorum" — two parties must approve every action</li>
+    </ul>
+    <p>
+      This design ensures no single person — not even the strategy manager — can 
+      unilaterally mint tokens or move funds.
+    </p>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════════════════════════════════ SECTION 5 -->
+  <section>
+    <div class="section-label">Section 5</div>
+    <h2>The Key Metrics — Where Every Number Comes From</h2>
+
+    <p>
+      Every number shown on the dashboard is either read directly from the Ethereum 
+      blockchain or calculated from on-chain data. Here is exactly where each metric 
+      originates and how it is computed.
+    </p>
+
+    <h3>Implied Annual Yield (mTBILL only)</h3>
+    <p>
+      Since the NAV price of mTBILL rises continuously as T-bills accrue interest, 
+      we can estimate the annualized yield by comparing today's price to the price 
+      30 days ago and projecting that rate forward.
+    </p>
+
+    <div class="math-block">
+      <div class="math-label">Formula 2 — Implied Annual Yield (30-day annualisation)</div>
+      $$\text{Implied APY} = \left(\frac{P_{\text{now}}}{P_{\text{30d ago}}}\right)^{\!\tfrac{365}{30}} - 1$$
+    </div>
+
+    <p>
+      Where \( P_{\text{now}} \) is today's oracle price and \( P_{\text{30d ago}} \) is 
+      the closest historical oracle reading to 30 days ago. The exponent 
+      \( \frac{365}{30} \) converts a 30-day return into an annual rate.
+    </p>
+
+    <p class="muted">
+      Example: if \( P_{\text{now}} = 1.0487 \) and \( P_{\text{30d ago}} = 1.0447 \), 
+      then the 30-day return is \(\frac{1.0487}{1.0447} - 1 \approx 0.383\%\), and 
+      the implied APY is approximately \( 4.77\% \).
+    </p>
+
+    <h3>Net Capital Flow</h3>
+    <p>
+      This shows whether more capital is entering the protocol (subscriptions) than 
+      leaving (redemptions), in token units, over a chosen time period.
+    </p>
+
+    <div class="math-block">
+      <div class="math-label">Formula 3 — Net Capital Flow</div>
+      $$\text{Net Flow} = \sum \text{Subscriptions} - \sum \text{Redemptions}$$
+    </div>
+
+    <p>
+      A positive net flow means the protocol is growing. A negative net flow means 
+      more capital is leaving than entering — an early warning signal for the operations team.
+    </p>
+
+    <h3>Redemption Pressure</h3>
+    <p>
+      This metric answers the question: of all the transactions in a given period, 
+      what fraction are redemptions? High redemption pressure means the operations 
+      team should check whether the MSL pool has enough USDC to cover instant redemptions.
+    </p>
+
+    <div class="math-block">
+      <div class="math-label">Formula 4 — Redemption Pressure</div>
+      $$\text{Redemption Pressure} = \frac{\text{Number of Redemptions}}{\text{Number of Subscriptions} + \text{Number of Redemptions}} \times 100\%$$
+    </div>
+
+    <p>
+      The dashboard colours this indicator green (&lt;25%), amber (25–50%), or red (&gt;50%).
+    </p>
+
+    <h3>Average Deal Size</h3>
+    <p>
+      This tells the operations team whether activity is being driven by large institutional 
+      investors or many smaller transactions.
+    </p>
+
+    <div class="math-block">
+      <div class="math-label">Formula 5 — Average Deal Size</div>
+      $$\text{Avg Subscription Size} = \frac{\text{Total Subscribed Volume}}{\text{Number of Subscriptions}}$$
+    </div>
+
+    <h3>7-Day Supply Change</h3>
+    <p>
+      Tracks how much the total token supply has changed over the last 7 days. 
+      Calculated from the blockchain event history by summing all mint and burn 
+      events within the 7-day window.
+    </p>
+
+    <div class="math-block">
+      <div class="math-label">Formula 6 — Supply Change (7 days)</div>
+      $$\Delta\text{Supply}_{7d} = \text{Supply}_{\text{today}} - \text{Supply}_{7\text{d ago}}$$
+      $$\Delta\text{Supply}_{7d}\% = \frac{\Delta\text{Supply}_{7d}}{\text{Supply}_{7\text{d ago}}} \times 100\%$$
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════════════════════════════════ SECTION 6 -->
+  <section>
+    <div class="section-label">Section 6</div>
+    <h2>The Five Dashboard Tabs</h2>
+
+    <div class="tab-grid">
+      <div class="tab-card">
+        <div class="tab-card-name">Operations</div>
+        <div class="tab-card-desc">
+          The morning health check. Shows oracle status, AUM, implied APY, 
+          24h net flow, 7d supply trend, and the 5 most recent 
+          subscription/redemption events. Everything an ops associate 
+          needs in the first 60 seconds of their day.
+        </div>
+      </div>
+      <div class="tab-card">
+        <div class="tab-card-name">Capital Flows</div>
+        <div class="tab-card-desc">
+          Detailed subscription and redemption management. Shows aggregates 
+          (total subscribed, total redeemed, net flow, redemption pressure) 
+          plus a daily bar chart and the full transaction table with USD 
+          values and counterparty addresses.
+        </div>
+      </div>
+      <div class="tab-card">
+        <div class="tab-card-name">Access Control</div>
+        <div class="tab-card-desc">
+          Shows who is authorised to perform which actions on each contract. 
+          Roles are: Admin (controls the contract), Minter (processes subscriptions), 
+          Burner (processes redemptions), Depositor. Also shows the event log of 
+          all role grants and revocations.
+        </div>
+      </div>
+      <div class="tab-card">
+        <div class="tab-card-name">Protocol Distribution</div>
+        <div class="tab-card-desc">
+          Shows where mTokens are deployed — how much is sitting in investor wallets 
+          vs deposited into DeFi protocols (e.g. Morpho). Includes a holder 
+          concentration analysis to assess single-redemption liquidity risk.
+        </div>
+      </div>
+    </div>
+    <div class="tab-card" style="margin-bottom: 12px;">
+      <div class="tab-card-name">Runbook</div>
+      <div class="tab-card-desc">
+        Interactive workflow guide for all standard operations: subscription processing, 
+        redemption, whitelist updates, daily NAV update, product launch, and incident 
+        response. Each workflow has expandable step-by-step details and an interactive 
+        checklist to mark off as you go. Also contains a regulatory quick reference 
+        (MiCA, FMA, eligible jurisdictions).
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════════════════════════════════ SECTION 7 -->
+  <section>
+    <div class="section-label">Section 7</div>
+    <h2>Where the Data Comes From</h2>
+
+    <p>
+      The dashboard fetches data from two distinct sources: the Etherscan API 
+      (for event history and transaction logs) and a direct RPC node connection 
+      (for reading live contract state). These are combined in the browser — 
+      no backend server is involved.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Metric shown</th>
+          <th>Data source</th>
+          <th>How it arrives</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>NAV price (current)</td>
+          <td>Oracle contract on Ethereum</td>
+          <td>RPC call: <code>latestRoundData()</code></td>
+        </tr>
+        <tr>
+          <td>NAV price history (chart)</td>
+          <td>Oracle contract event log</td>
+          <td>Etherscan API: <code>getLogs</code> for <code>AnswerUpdated</code> events</td>
+        </tr>
+        <tr>
+          <td>Total supply</td>
+          <td>mToken ERC-20 contract</td>
+          <td>RPC call: <code>totalSupply()</code></td>
+        </tr>
+        <tr>
+          <td>Subscriptions &amp; Redemptions</td>
+          <td>mToken Transfer event log</td>
+          <td>Etherscan API: mint = Transfer from zero address; burn = Transfer to zero address</td>
+        </tr>
+        <tr>
+          <td>Role holders (Access Control)</td>
+          <td>Contract <code>RoleGranted</code> / <code>RoleRevoked</code> events</td>
+          <td>Etherscan getLogs + RPC <code>hasRole()</code> to confirm current state</td>
+        </tr>
+        <tr>
+          <td>Protocol balances (Distribution)</td>
+          <td>mToken ERC-20 contract</td>
+          <td>RPC call: <code>balanceOf(protocolAddress)</code> for each known protocol</td>
+        </tr>
+        <tr>
+          <td>Transaction calldata (Decoder)</td>
+          <td>Etherscan transaction API</td>
+          <td>Fetches raw input data then decodes against known function selectors</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-blue">
+      <div class="callout-label">Why Etherscan V2?</div>
+      <p>
+        The original Etherscan V1 API (<code>api.etherscan.io/api</code>) was deprecated. 
+        The dashboard was updated to use the V2 endpoint 
+        (<code>api.etherscan.io/v2/api?chainid=1</code>) which requires specifying the 
+        chain explicitly and uses an updated authentication model. This was a practical 
+        fix encountered during development.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════════════════════════════════ SECTION 8 -->
+  <section>
+    <div class="section-label">Section 8</div>
+    <h2>What to Explain in an Interview</h2>
+
+    <p>
+      This section maps every feature of the dashboard to what you already know 
+      from your work experience and studies — so you can speak naturally, not technically.
+    </p>
+
+    <h4>NAV pricing and the oracle</h4>
+    <p>
+      "The oracle is the on-chain equivalent of a Bloomberg price feed. Just as a Bloomberg 
+      terminal publishes the T-bill price at market close, the oracle publishes the fund 
+      NAV on Ethereum at the end of each trading day. I built the dashboard to check if 
+      that price is stale — same as you'd flag a data feed issue in a risk system."
+    </p>
+
+    <h4>Subscription and redemption workflow</h4>
+    <p>
+      "The lifecycle is identical to subscribing to a traditional fund — KYC check, 
+      USDC received, NAV strike, tokens allocated. The instant mode is analogous to 
+      a money market fund's same-day settlement. The standard mode maps to T+2/T+7 
+      which I'm familiar with from the bond sales and agency lending desks at DekaBank."
+    </p>
+
+    <h4>MPC workspace and the 2-of-N quorum</h4>
+    <p>
+      "MPC (multi-party computation) is the institutional-grade custody model used 
+      instead of a hardware wallet. It's analogous to dual control in traditional 
+      finance — no single person can sign a payment unilaterally. At Midas, the 
+      strategy manager proposes and Midas co-signs. This is directly comparable to 
+      the co-signing requirements I encountered working on the smart contract framework 
+      for the Qivalis stablecoin consortium at DekaBank."
+    </p>
+
+    <h4>Redemption pressure and liquidity management</h4>
+    <p>
+      "Redemption pressure is essentially a real-time liquidity stress indicator. 
+      If redemptions start to outpace subscriptions — especially if large single 
+      redemptions exceed the MSL pool — that's the equivalent of a liquidity 
+      coverage ratio breach. I applied similar logic using the CAMELS framework 
+      during my regulatory analysis work at the State Bank of Pakistan."
+    </p>
+
+    <h4>Regulatory framework on the Runbook</h4>
+    <p>
+      "The product is structured as a tokenized certificate under German law, issued via 
+      a Luxembourg SPV, with an FMA-approved prospectus in Liechtenstein. Non-US, 
+      non-UK eligibility restrictions apply. MiCA reporting obligations are relevant 
+      where the product meets the asset-referenced token threshold. I included these 
+      in the runbook because they directly affect how you onboard new strategy managers 
+      or products — and it aligns with the MiCA and EBA regulatory skills on my CV."
+    </p>
+
+    <div class="callout callout-green">
+      <div class="callout-label">The one-line summary</div>
+      <p>
+        This dashboard bridges the gap between blockchain data (which lives as raw events 
+        on Ethereum) and institutional operations workflows (which require clean, 
+        actionable information). It was built to demonstrate that you can think about 
+        crypto infrastructure the same way you think about a Bloomberg terminal — as a 
+        data tool that serves a financial operations function.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <p class="muted" style="text-align: center; font-size: 8.5pt; padding-top: 8px;">
+    Midas Operations Dashboard · Internal Briefing Document · May 2026 ·
+    Syed Zee Waqar Hussain
+  </p>
+
+</div>
+</body>
+</html>
