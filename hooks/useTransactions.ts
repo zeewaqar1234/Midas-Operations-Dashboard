@@ -26,19 +26,28 @@ export interface TxDetail {
 }
 
 export interface FlowSummary {
-  totalMinted: number;       // token units
+  totalMinted: number;
   totalBurned: number;
   totalMintedUSD: number | null;
   totalBurnedUSD: number | null;
   subscriptionCount: number;
   redemptionCount: number;
   netFlow: number;
-  netFlowRatio: number | null; // subscriptions / redemptions
+  netFlowRatio: number | null;
+  avgSubscriptionSize: number;
+  avgRedemptionSize: number;
+  largestTx: { amount: number; type: TxType; hash: string } | null;
+}
+
+export interface DailyFlow {
+  date: string;
+  subscriptions: number;
+  redemptions: number;
 }
 
 export interface UseTransactionsReturn {
-  transactions: MintBurnTx[];   // filtered view
-  allTxs: MintBurnTx[];         // full unfiltered set (for summary calcs)
+  transactions: MintBurnTx[];
+  allTxs: MintBurnTx[];
   loading: boolean;
   error: string | null;
   tokenFilter: TokenFilter;
@@ -50,6 +59,7 @@ export interface UseTransactionsReturn {
   refresh: () => void;
   fetchTxDetail: (hash: string) => Promise<TxDetail>;
   getSummary: (navPrice: number | null, range?: TimeRange) => FlowSummary;
+  getDailyFlows: (range?: TimeRange) => DailyFlow[];
 }
 
 // ─── Time range cutoff ────────────────────────────────────────────────────────
@@ -122,6 +132,14 @@ export function useTransactions(): UseTransactionsReturn {
         }
       }
 
+      let largest: FlowSummary["largestTx"] = null;
+      for (const tx of inRange) {
+        const amt = formatTokenAmount(tx.value, Number(tx.tokenDecimal));
+        if (!largest || amt > largest.amount) {
+          largest = { amount: amt, type: tx.eventType, hash: tx.hash };
+        }
+      }
+
       return {
         totalMinted,
         totalBurned,
@@ -131,7 +149,44 @@ export function useTransactions(): UseTransactionsReturn {
         redemptionCount: burnCount,
         netFlow: totalMinted - totalBurned,
         netFlowRatio: burnCount > 0 ? totalMinted / totalBurned : null,
+        avgSubscriptionSize: subCount > 0 ? totalMinted / subCount : 0,
+        avgRedemptionSize: burnCount > 0 ? totalBurned / burnCount : 0,
+        largestTx: largest,
       };
+    },
+    [allTxs, timeRange]
+  );
+
+  const getDailyFlows = useCallback(
+    (range: TimeRange = timeRange): DailyFlow[] => {
+      const c = getCutoff(range);
+      const inRange = allTxs.filter((tx) => Number(tx.timeStamp) >= c);
+      const buckets = new Map<string, { subscriptions: number; redemptions: number }>();
+
+      for (const tx of inRange) {
+        const d = new Date(Number(tx.timeStamp) * 1000);
+        const key = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        if (!buckets.has(key)) buckets.set(key, { subscriptions: 0, redemptions: 0 });
+        const b = buckets.get(key)!;
+        const amt = formatTokenAmount(tx.value, Number(tx.tokenDecimal));
+        if (tx.eventType === "mint") b.subscriptions += amt;
+        else b.redemptions += amt;
+      }
+
+      return Array.from(buckets.entries())
+        .map(([date, vals]) => ({ date, ...vals }))
+        .sort((a, b) => {
+          // sort by original timestamp for correct chart order
+          const aTs = allTxs.find((tx) => {
+            const d = new Date(Number(tx.timeStamp) * 1000);
+            return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) === a.date;
+          });
+          const bTs = allTxs.find((tx) => {
+            const d = new Date(Number(tx.timeStamp) * 1000);
+            return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) === b.date;
+          });
+          return Number(aTs?.timeStamp ?? 0) - Number(bTs?.timeStamp ?? 0);
+        });
     },
     [allTxs, timeRange]
   );
@@ -155,5 +210,6 @@ export function useTransactions(): UseTransactionsReturn {
     refresh: fetchTxs,
     fetchTxDetail,
     getSummary,
+    getDailyFlows,
   };
 }

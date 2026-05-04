@@ -10,8 +10,24 @@ import {
   ArrowLeftRight,
   ChevronDown,
   ChevronUp,
+  BarChart2,
 } from "lucide-react";
-import { useTransactions, type TokenFilter, type TxTypeFilter, type TimeRange } from "@/hooks/useTransactions";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  useTransactions,
+  type TokenFilter,
+  type TxTypeFilter,
+  type TimeRange,
+} from "@/hooks/useTransactions";
 import { useNavHistory } from "@/hooks/useNavHistory";
 import TransactionTable from "@/components/TransactionTable";
 import TxDecoder from "@/components/TxDecoder";
@@ -34,7 +50,7 @@ function FilterPill({
       className={`px-3 py-1.5 rounded-[8px] text-xs font-medium transition-all duration-150 ${
         active
           ? "bg-accent/10 text-accent"
-          : "bg-surface-2 text-text-muted border border-border/60 hover:text-text-primary hover:border-accent/20"
+          : "bg-white text-text-muted border border-border hover:text-text-primary hover:border-accent/20"
       }`}
     >
       {children}
@@ -42,7 +58,7 @@ function FilterPill({
   );
 }
 
-// ─── Flow summary cards ───────────────────────────────────────────────────────
+// ─── Flow Summary Cards — with avg deal size ──────────────────────────────────
 
 function FlowSummaryCards({
   navPrice,
@@ -53,12 +69,16 @@ function FlowSummaryCards({
   getSummary: ReturnType<typeof useTransactions>["getSummary"];
   timeRange: TimeRange;
 }) {
-  const summary = getSummary(navPrice, timeRange);
-
+  const s = getSummary(navPrice, timeRange);
   const rangeLabel = timeRange === "all" ? "All time" : `Last ${timeRange}`;
 
+  const redemptionPressure =
+    s.subscriptionCount + s.redemptionCount > 0
+      ? (s.redemptionCount / (s.subscriptionCount + s.redemptionCount)) * 100
+      : 0;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Subscriptions */}
       <div className="card p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -70,20 +90,23 @@ function FlowSummaryCards({
           </div>
           <span className="text-xs text-text-muted">{rangeLabel}</span>
         </div>
-
         <div>
           <div className="text-2xl font-semibold text-text-primary tabular-nums">
-            {formatCompact(summary.totalMinted)}
+            {formatCompact(s.totalMinted)}
           </div>
-          {summary.totalMintedUSD != null && (
+          {s.totalMintedUSD != null && (
             <div className="text-sm text-success tabular-nums mt-0.5">
-              {formatUSD(summary.totalMintedUSD)}
+              {formatUSD(s.totalMintedUSD)}
             </div>
           )}
         </div>
-
-        <div className="text-xs text-text-muted border-t border-border/40 pt-2">
-          {summary.subscriptionCount} subscription{summary.subscriptionCount !== 1 ? "s" : ""}
+        <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-text-muted">
+          <span>{s.subscriptionCount} transactions</span>
+          {s.avgSubscriptionSize > 0 && (
+            <span className="tabular-nums font-medium text-text-secondary">
+              avg {formatCompact(s.avgSubscriptionSize)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -98,20 +121,23 @@ function FlowSummaryCards({
           </div>
           <span className="text-xs text-text-muted">{rangeLabel}</span>
         </div>
-
         <div>
           <div className="text-2xl font-semibold text-text-primary tabular-nums">
-            {summary.totalBurned > 0 ? formatCompact(summary.totalBurned) : "—"}
+            {s.totalBurned > 0 ? formatCompact(s.totalBurned) : "—"}
           </div>
-          {summary.totalBurnedUSD != null && summary.totalBurned > 0 && (
+          {s.totalBurnedUSD != null && s.totalBurned > 0 && (
             <div className="text-sm text-danger tabular-nums mt-0.5">
-              {formatUSD(summary.totalBurnedUSD)}
+              {formatUSD(s.totalBurnedUSD)}
             </div>
           )}
         </div>
-
-        <div className="text-xs text-text-muted border-t border-border/40 pt-2">
-          {summary.redemptionCount} redemption{summary.redemptionCount !== 1 ? "s" : ""}
+        <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-text-muted">
+          <span>{s.redemptionCount} transactions</span>
+          {s.avgRedemptionSize > 0 && (
+            <span className="tabular-nums font-medium text-text-secondary">
+              avg {formatCompact(s.avgRedemptionSize)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -122,39 +148,163 @@ function FlowSummaryCards({
             <div className="w-7 h-7 rounded-[8px] bg-accent/10 flex items-center justify-center">
               <ArrowLeftRight size={13} className="text-accent" />
             </div>
-            <span className="text-sm font-semibold text-text-primary">Net Capital Flow</span>
+            <span className="text-sm font-semibold text-text-primary">Net Flow</span>
           </div>
           <span className="text-xs text-text-muted">{rangeLabel}</span>
         </div>
-
         <div>
           <div className={`text-2xl font-semibold tabular-nums ${
-            summary.netFlow >= 0 ? "text-success" : "text-danger"
+            s.netFlow > 0 ? "text-success" : s.netFlow < 0 ? "text-danger" : "text-text-primary"
           }`}>
-            {summary.netFlow === 0
+            {s.netFlow === 0
               ? "—"
-              : `${summary.netFlow > 0 ? "+" : ""}${formatCompact(summary.netFlow)}`}
+              : `${s.netFlow > 0 ? "+" : ""}${formatCompact(s.netFlow)}`}
           </div>
-          {summary.totalMintedUSD != null && summary.totalBurnedUSD != null && (
+          {s.totalMintedUSD != null && s.totalBurnedUSD != null && (
             <div className={`text-sm tabular-nums mt-0.5 ${
-              summary.netFlow >= 0 ? "text-success" : "text-danger"
+              s.netFlow > 0 ? "text-success" : s.netFlow < 0 ? "text-danger" : "text-text-muted"
             }`}>
-              {summary.netFlow > 0
-                ? `+${formatUSD(summary.totalMintedUSD - summary.totalBurnedUSD)}`
-                : summary.netFlow < 0
-                ? formatUSD(summary.totalMintedUSD - summary.totalBurnedUSD)
+              {s.netFlow !== 0
+                ? `${s.netFlow > 0 ? "+" : ""}${formatUSD(s.totalMintedUSD - s.totalBurnedUSD)}`
                 : "Neutral"}
             </div>
           )}
         </div>
-
-        <div className="text-xs text-text-muted border-t border-border/40 pt-2">
-          {summary.netFlowRatio != null && summary.redemptionCount > 0
-            ? `${summary.netFlowRatio.toFixed(1)}× more subscriptions than redemptions`
-            : summary.redemptionCount === 0 && summary.subscriptionCount > 0
-            ? "No redemptions in this period"
-            : "No activity in this period"}
+        <div className="border-t border-border/50 pt-2 text-xs text-text-muted">
+          {s.netFlowRatio != null && s.redemptionCount > 0
+            ? `${s.netFlowRatio.toFixed(1)}× more subscriptions`
+            : s.redemptionCount === 0 && s.subscriptionCount > 0
+            ? "No redemptions this period"
+            : "No activity"}
         </div>
+      </div>
+
+      {/* Redemption Pressure — operational risk view */}
+      <div className="card p-5 flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <div className={`w-7 h-7 rounded-[8px] flex items-center justify-center ${
+            redemptionPressure > 50 ? "bg-danger/10" : redemptionPressure > 25 ? "bg-warning/10" : "bg-success/10"
+          }`}>
+            <BarChart2 size={13} className={
+              redemptionPressure > 50 ? "text-danger" : redemptionPressure > 25 ? "text-warning" : "text-success"
+            } />
+          </div>
+          <span className="text-sm font-semibold text-text-primary">Redemption Pressure</span>
+        </div>
+        <div>
+          <div className={`text-2xl font-semibold tabular-nums ${
+            redemptionPressure > 50 ? "text-danger" : redemptionPressure > 25 ? "text-warning" : "text-success"
+          }`}>
+            {redemptionPressure.toFixed(0)}%
+          </div>
+          <div className="text-xs text-text-muted mt-0.5">of total transactions are redemptions</div>
+        </div>
+        <div className="border-t border-border/50 pt-2">
+          <div className="w-full h-1.5 rounded-full bg-surface-3">
+            <div
+              className={`h-1.5 rounded-full transition-all ${
+                redemptionPressure > 50 ? "bg-danger" : redemptionPressure > 25 ? "bg-warning" : "bg-success"
+              }`}
+              style={{ width: `${redemptionPressure}%` }}
+            />
+          </div>
+          <div className="text-[10px] text-text-muted mt-1">
+            {redemptionPressure < 25 ? "Low pressure — healthy inflow dominance"
+              : redemptionPressure < 50 ? "Moderate — monitor MSL pool capacity"
+              : "High — check instant redemption pool"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Daily Flow Chart ─────────────────────────────────────────────────────────
+
+// Custom tooltip for the bar chart
+function CustomTooltip({ active, payload, label }: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white border border-border rounded-[8px] shadow-card px-3 py-2.5 text-xs">
+      <div className="font-semibold text-text-primary mb-1.5">{label}</div>
+      {payload.map((p) => (
+        <div key={p.name} className="flex items-center gap-2 py-0.5">
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
+          <span className="text-text-secondary">{p.name}:</span>
+          <span className="font-mono font-medium text-text-primary">{formatCompact(p.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DailyFlowChart({
+  getDailyFlows,
+  timeRange,
+  loading,
+}: {
+  getDailyFlows: ReturnType<typeof useTransactions>["getDailyFlows"];
+  timeRange: TimeRange;
+  loading: boolean;
+}) {
+  const data = getDailyFlows(timeRange);
+
+  if (loading) {
+    return (
+      <div className="card p-5">
+        <div className="animate-pulse h-48 rounded-[8px] bg-surface-3" />
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="card p-5 flex items-center justify-center h-36 text-sm text-text-muted">
+        No transaction data for this period
+      </div>
+    );
+  }
+
+  return (
+    <div className="card p-5 flex flex-col gap-3">
+      <div>
+        <h2 className="text-sm font-semibold text-text-primary">Daily Flow Breakdown</h2>
+        <p className="text-xs text-text-muted mt-0.5">
+          Subscription vs redemption volume by day — helps identify capital movement trends
+        </p>
+      </div>
+      <div className="h-52">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} barCategoryGap="35%" barGap={2}>
+            <CartesianGrid vertical={false} stroke="#E5E5E7" strokeDasharray="0" />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 10, fill: "#838589" }}
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: "#838589" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v: number) => formatCompact(v)}
+              width={50}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend
+              iconType="circle"
+              iconSize={7}
+              wrapperStyle={{ fontSize: 11, color: "#636366" }}
+            />
+            <Bar dataKey="subscriptions" name="Subscriptions" fill="#10B981" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="redemptions" name="Redemptions" fill="#EF4444" radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -178,6 +328,7 @@ export default function CapitalFlowsPage() {
     refresh,
     fetchTxDetail,
     getSummary,
+    getDailyFlows,
   } = useTransactions();
 
   const { currentPrice: navPrice } = useNavHistory();
@@ -225,10 +376,27 @@ export default function CapitalFlowsPage() {
         </div>
       )}
 
+      {/* Period selector — sits above cards, controls both cards + chart + table */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-text-muted font-medium">Period:</span>
+          <div className="flex gap-1">
+            {TIME_RANGES.map(({ label, value }) => (
+              <FilterPill key={value} active={timeRange === value} onClick={() => setTimeRange(value)}>
+                {label}
+              </FilterPill>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Section A: Flow Summary Cards */}
       <FlowSummaryCards navPrice={navPrice} getSummary={getSummary} timeRange={timeRange} />
 
-      {/* Section B: Filters */}
+      {/* Section B: Daily Flow Chart */}
+      <DailyFlowChart getDailyFlows={getDailyFlows} timeRange={timeRange} loading={loading} />
+
+      {/* Section C: Filters + Table */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         <div className="flex items-center gap-1.5">
           <Filter size={12} className="text-text-muted" />
@@ -253,17 +421,6 @@ export default function CapitalFlowsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-text-muted font-medium">Period:</span>
-          <div className="flex gap-1">
-            {TIME_RANGES.map(({ label, value }) => (
-              <FilterPill key={value} active={timeRange === value} onClick={() => setTimeRange(value)}>
-                {label}
-              </FilterPill>
-            ))}
-          </div>
-        </div>
-
         {!loading && (
           <span className="ml-auto text-xs text-text-muted">
             {transactions.length} transaction{transactions.length !== 1 ? "s" : ""}
@@ -271,7 +428,6 @@ export default function CapitalFlowsPage() {
         )}
       </div>
 
-      {/* Section B: Transaction Table */}
       <TransactionTable
         transactions={transactions}
         loading={loading}
@@ -279,22 +435,22 @@ export default function CapitalFlowsPage() {
         navPrice={navPrice}
       />
 
-      {/* Section C: Smart Contract Decoder — collapsible Tools panel */}
+      {/* Section D: Smart Contract Decoder — collapsible */}
       <div className="card overflow-hidden">
         <button
           onClick={() => setDecoderOpen((o) => !o)}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-2/40 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-2/60 transition-colors"
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-text-primary">Smart Contract Decoder</span>
-            <span className="text-xs text-text-muted">— paste any tx hash to decode calldata</span>
+            <span className="text-xs text-text-muted">— decode any transaction's calldata</span>
           </div>
           {decoderOpen
             ? <ChevronUp size={15} className="text-text-muted" />
             : <ChevronDown size={15} className="text-text-muted" />}
         </button>
         {decoderOpen && (
-          <div className="border-t border-border/60 px-5 pb-5 pt-4">
+          <div className="border-t border-border px-5 pb-5 pt-4">
             <TxDecoder />
           </div>
         )}
